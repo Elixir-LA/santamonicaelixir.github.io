@@ -1,10 +1,12 @@
 ---
 layout: page
-title: Meeting Minutes
-permalink: /meeting_minutes
+title: Welcome!
+permalink: /
 ---
 
 ### 2016-04-28
+
+#### Where did we meet?
 
 Carbon Five Santa Monica
 
@@ -17,7 +19,7 @@ We brainstormed a bunch of game ideas from real-time battles, to
 turn-based MMO games, and finally settled on a multiplayer party game
 [werewolf]() to build out.
 
-We initialized the Github repo (https://github.com/SantaMonicaElixir/werewolf) and
+We initialized the [Github repo](https://github.com/SantaMonicaElixir/werewolf) and
 added our first Phoenix commit.
 
 We drew up an experience map illustrating the basic game workflow and

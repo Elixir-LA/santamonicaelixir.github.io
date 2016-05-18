@@ -7,8 +7,14 @@
     <div class="footer-col-wrapper">
       <div class="footer-col footer-col-1">
         <ul class="contact-list">
-          <li>{{ site.title }}</li>
-          <li><a href="mailto:{{ site.email }}">{{ site.email }}</a></li>
+          <li>
+            <h4>Join our Slack group!</h4>
+            <script async defer src="https://santa-monica-elixir-slackin.herokuapp.com/slackin.js?large"></script>
+          </li>
+          <li>
+            <h4>On Meetup</h4>
+            <a href="http://www.meetup.com/Santa-Monica-Elixir/">Santa Monica Elixir</a>
+          </li>
         </ul>
       </div>
 
@@ -16,6 +22,7 @@
         <ul class="social-media-list">
           {% if site.github_username %}
           <li>
+            <h4>On Github:</h4>
             {% include icon-github.html username=site.github_username %}
           </li>
           {% endif %}
