@@ -1,10 +1,8 @@
 ---
-layout: page
-title: Welcome!
-permalink: /
+layout: post
+title: "Welcome! April Meetup Minutes"
+date:   2016-04-28 19:19:00 -0700
 ---
-
-### 2016-04-28
 
 #### Where did we meet?
 
