@@ -48,14 +48,6 @@ We want to begin modeling our game into constituent "processes".
   - Werewolf
   - Seer
 
-### How should these processes interact with each other?
-
-Remember in our last meetup, we modeled a Websocket connection with a
-Channel abstraction. Thus, some extra actors are introduced to the
-system:
-
-* GameChannel (nee RoomChannel)
-
 ### Let's go over what GenServer does for us
 
 [GenServer](http://elixir-lang.org/docs/stable/elixir/GenServer.html) is a behavior module that abstracts common
@@ -135,4 +127,100 @@ iex> :observer.start
 ```
 
 This gives you a basic overview of what's going on in the Erlang VM.
+
+### Supervisors
+
+Supervisors manage the lifecycle of "children" processes.
+
+They are designed to work like trees - supervisors are responsible only
+for the processes that live under them.
+
+#### Strategies
+
+Strategies determine supervisors' behaviors when their child processes
+exit, fail, or get stuck. They can be `:one_for_one`, `:one_for_all`, `:rest_for_one`, or
+`:simple_one_for_one`. See the
+[docs](http://elixir-lang.org/docs/stable/elixir/Supervisor.html) for more details.
+
+#### `init/1`
+
+```elixir
+defmodule Werewolf.Supervisor do
+  use Supervisor
+
+  def init(:ok) do
+    children = [
+      worker(Werewolf.Gameplay, [], restart: :temporary)
+    ]
+    supervise(children, strategy: :simple_one_for_one)
+  end
+end
+```
+
+#### `start_child/2`
+
+```elixir
+defmodule Werewolf.Supervisor do
+  use Supervisor
+  def create_game(id), do: Supervisor.start_child(__MODULE__, [id])
+end
+```
+
+Docs: [Supervisor](http://elixir-lang.org/docs/stable/elixir/Supervisor.html)
+
+### How should these processes interact with each other?
+
+Let's pause for a second here. Currently, our Gameplay process simply
+tracks who's in the Game.
+
+Let's first write a hook for the Gameplay process to be created each
+time a user creates a game. That's done in our `GameStartController`,
+where we ask the `Supervisor` to start up a game for us.
+
+```elixir
+defmodule Werewolf.GameStartController do
+  use Werewolf.Web, :controller
+  alias Werewolf.Game
+
+  def create(conn, %{"game" => %{"name" => user_name}}) do
+    changeset = Game.changeset(%Game{slug: generate_slug})
+
+    case Repo.insert(changeset) do
+      {:ok, game} ->
+        conn
+        |> start_game(game)
+        |> put_flash(:info, "Game created successfully.")
+        |> put_session(:user_name, user_name)
+        |> redirect(to: game_path(conn, :show, game.slug))
+      {:error, changeset} ->
+        render(conn, "new.html", changeset: changeset)
+    end
+  end
+
+  defp start_game(conn, game) do
+    {:ok, _pid} = Werewolf.Gameplay.Supervisor.create_game(game.slug)
+    conn
+  end
+end
+```
+
+Let's go back to our GameChannel - each time a player enters the game,
+let's have the Gameplay process join the existing game.
+
+```elixir
+defmodule Werewolf.GameChannel do
+  alias Werewolf.Gameplay
+
+  def join("games:" <> game_id, _payload, socket) do
+    player_id = socket.assigns.user
+
+    case Gameplay.join(game_id, player_id, socket.channel_pid) do
+      {:ok, _pid} ->
+        send(self, :after_join)
+        {:ok, socket}
+      {:error, reason} ->
+        {:error, %{reason: reason}}
+    end
+  end
+```
 
